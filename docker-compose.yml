@@ -1,0 +1,13 @@
+version: '3.8'
+
+name: 'crab-rest-api-yt'
+
+services:
+  db:
+    container_name: 'crab-rest-api-yt-db'
+    image: mongo
+    ports:
+      - '27017:27017'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=123456
