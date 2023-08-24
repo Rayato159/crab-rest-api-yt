@@ -1,5 +1,5 @@
 use bson::{oid::ObjectId, from_document};
-use mongodb::{bson::{doc, Document}, Cursor};
+use mongodb::{bson::{doc, Document}, Cursor, results::UpdateResult};
 
 use crate::config::database::dbconnect;
 
@@ -128,4 +128,39 @@ pub async fn find_one_item(item_id: ObjectId) -> Result<Item, String> {
         level_required: item.level_required,
         price: item.price
     })
+}
+
+pub async fn update_item(req: ItemBson) -> Result<UpdateResult, String> {
+    let db = match dbconnect().await {
+        Ok(r) => r,
+        Err(e) => panic!("Error: Database connection failed: {:?}", e)
+    };
+
+    let col = db.collection::<Document>("items");
+
+    let mut update_fields = doc! {};
+
+    if req.name != "" {
+        update_fields.insert("name", req.name);
+    }
+    if req.description != "" {
+        update_fields.insert("description", req.description);
+    }
+    if req.damage > 0 {
+        update_fields.insert("damage", req.damage);
+    }
+    if req.level_required > 0 {
+        update_fields.insert("level_required", req.level_required);
+    }
+    if req.price > 0 {
+        update_fields.insert("price", req.price);
+    }
+
+    match col.update_one(doc! {"_id": req._id}, doc! {"$set": update_fields}, None).await {
+        Ok(r) => Ok(r),
+        Err(e) => {
+            info!("Error: update_one failed: {:?}", e);
+            Err(format!("Error: update_one failed"))
+        }
+    }
 }
