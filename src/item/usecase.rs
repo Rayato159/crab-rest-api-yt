@@ -1,5 +1,5 @@
 use bson::oid::ObjectId;
-use mongodb::results::UpdateResult;
+use mongodb::results::{UpdateResult, DeleteResult};
 
 use super::{entity::{InsertItemReq, Item, ItemBson}, repository};
 
@@ -18,3 +18,7 @@ pub async fn find_one_item(item_id: ObjectId) -> Result<Item, String> {
 pub async fn update_item(req: ItemBson) -> Result<UpdateResult, String> {
     repository::update_item(req).await
 } 
+
+pub async fn delete_item(item_id: ObjectId) -> Result<DeleteResult, String> {
+    repository::delete_item(item_id).await
+}

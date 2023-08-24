@@ -1,5 +1,5 @@
 use bson::{oid::ObjectId, from_document};
-use mongodb::{bson::{doc, Document}, Cursor, results::UpdateResult};
+use mongodb::{bson::{doc, Document}, Cursor, results::{UpdateResult, DeleteResult}};
 
 use crate::config::database::dbconnect;
 
@@ -161,6 +161,23 @@ pub async fn update_item(req: ItemBson) -> Result<UpdateResult, String> {
         Err(e) => {
             info!("Error: update_one failed: {:?}", e);
             Err(format!("Error: update_one failed"))
+        }
+    }
+}
+
+pub async fn delete_item(item_id: ObjectId) -> Result<DeleteResult, String> {
+    let db = match dbconnect().await {
+        Ok(r) => r,
+        Err(e) => panic!("Error: Database connection failed: {:?}", e)
+    };
+
+    let col = db.collection::<Document>("items");
+
+    match col.delete_one(doc! {"_id": item_id}, None).await {
+        Ok(r) => Ok(r),
+        Err(e) => {
+            info!("Error: delete item failed: {:?}", e);
+            Err(format!("Error: delete item failed"))
         }
     }
 }

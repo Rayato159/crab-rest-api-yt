@@ -103,3 +103,28 @@ pub async fn update_item(Path(item_id): Path<String>, Json(req): Json<InsertItem
         )
     }
 }
+
+pub async fn delete_item(Path(item_id): Path<String>) -> impl IntoResponse {
+    let item_object_id = match ObjectId::parse_str(item_id) {
+        Ok(id) => id,
+        Err(_) => return (
+            StatusCode::BAD_REQUEST,
+            Json(json!({
+                "message": "Error: Parsing objectId failed"
+            })).into_response()
+        )
+    };
+
+    match usecase::delete_item(item_object_id).await {
+        Ok(r) => (
+            StatusCode::OK,
+            Json(r).into_response()
+        ),
+        Err(e) => (
+            StatusCode::BAD_REQUEST,
+            Json(json!({
+                "message": e
+            })).into_response()
+        )
+    }
+}
