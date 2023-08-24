@@ -33,6 +33,7 @@ async fn main() {
         )
         .route("/", get(|| async { "OK" }))
         .route("/item", post(item::handler::insert_one_item))
+        .route("/item", get(item::handler::find_items))
         .route("/:item_id/item", get(item::handler::find_one_item));
 
     // run it with hyper on localhost:3000

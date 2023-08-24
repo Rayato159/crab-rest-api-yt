@@ -4,6 +4,10 @@ use serde_json::json;
 
 use super::{entity::InsertItemReq, usecase};
 
+pub async fn find_items() -> impl IntoResponse {
+    (StatusCode::OK, Json(usecase::find_items().await).into_response())
+}
+
 pub async fn insert_one_item(Json(req): Json<InsertItemReq>) -> impl IntoResponse {
     let item_id = match usecase::insert_one_item(req).await {
         Ok(id) => id,

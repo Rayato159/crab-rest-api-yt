@@ -1,10 +1,10 @@
-use axum::{
-    http::StatusCode, response::IntoResponse, Json,
-};
 use bson::oid::ObjectId;
-use serde_json::json;
 
 use super::{entity::{InsertItemReq, Item}, repository};
+
+pub async fn find_items() -> Vec<Item> {
+    repository::find_items().await
+}
 
 pub async fn insert_one_item(req: InsertItemReq) -> Result<ObjectId, String> {
     repository::insert_one_item(req).await

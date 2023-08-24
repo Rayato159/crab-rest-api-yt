@@ -1,11 +1,60 @@
 use bson::{oid::ObjectId, from_document};
-use mongodb::bson::{doc, Document};
+use mongodb::{bson::{doc, Document}, Cursor};
 
 use crate::config::database::dbconnect;
 
 use super::entity::{InsertItemReq, Item, ItemBson};
 use std::result::Result;
 use tracing::log::info;
+
+pub async fn find_items() -> Vec<Item> {
+    let db = match dbconnect().await {
+        Ok(r) => r,
+        Err(e) => panic!("Error: Database connection failed: {:?}", e)
+    };
+
+    let col = db.collection::<Document>("items");
+
+    let cursor_result = col.find(doc! {}, None).await;
+    let mut cursor: Cursor<Document> = match cursor_result {
+        Ok(r) => r,
+        Err(e) => {
+            info!("Error: find items failed: {:?}", e);
+            return Vec::new()
+        }
+    };
+
+    let mut items: Vec<Item> = Vec::new();
+    while let Ok(next) = cursor.advance().await {
+        if !next {
+            break
+        }
+
+        let item_doc = match cursor.deserialize_current().ok() {
+            Some(doc) => doc,
+            None => break
+        };
+
+        let item: ItemBson = match from_document(item_doc).map_err(|e| format!("Error: deserialize object failed: {:?}", e)) {
+            Ok(i) => i,
+            Err(e) => {
+                info!("{:?}", e);
+                return Vec::new()
+            }
+        };
+
+        items.push(Item {
+            _id: item._id.to_hex(),
+            name: item.name,
+            description: item.description,
+            damage: item.damage,
+            level_required: item.level_required,
+            price:item.price
+        })
+    }
+
+    items
+}
 
 pub async fn insert_one_item(req: InsertItemReq) -> Result<ObjectId, String> {
     let db = match dbconnect().await {
